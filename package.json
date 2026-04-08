@@ -1,0 +1,29 @@
+{
+  "name": "timhortons-bot",
+  "version": "1.0.0",
+  "description": "Automated Tim Hortons ordering bot via Telegram",
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts",
+    "dev": "tsx watch index.ts"
+  },
+  "keywords": [
+    "timhortons",
+    "telegram",
+    "bot",
+    "automation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "amazon-cognito-identity-js": "^6.3.16",
+    "dotenv": "^16.0.0",
+    "node-telegram-bot-api": "^0.66.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/node-telegram-bot-api": "^0.64.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
