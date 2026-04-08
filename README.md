@@ -129,7 +129,15 @@ pm2 start timhortons-bot          # start again
 
 ## Token refresh
 
-The bot automatically refreshes the Cognito ID token every 55 minutes using your `TH_REFRESH_TOKEN`. The refresh token itself is long-lived (no expiry under normal use). You only need to re-capture it if you log out of the Tim Hortons app.
+The bot automatically refreshes the Cognito ID token every 55 minutes using your `TH_REFRESH_TOKEN` — no manual intervention needed for day-to-day use.
+
+The refresh token itself is long-lived but can expire in these situations:
+
+- You log out of the Tim Hortons app
+- You sign in on a new device and the old session gets invalidated
+- The token goes unused for ~30 days (Cognito inactivity timeout)
+
+If the bot stops working and `pm2 logs timhortons-bot` shows a Cognito auth error, just redo the mitmproxy capture to grab a fresh refresh token and update `TH_REFRESH_TOKEN` in `.env`, then `pm2 restart timhortons-bot`.
 
 ## Customizing your order
 
