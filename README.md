@@ -4,6 +4,12 @@ Automate your Tim Hortons mobile order via Telegram. Send "coffee" and your orde
 
 > Built by reverse engineering the Tim Hortons app GraphQL API with mitmproxy.
 
+## Preview
+
+| Telegram | PM2 Logs |
+|---|---|
+| ![Telegram screenshot](assets/telegram.jpg) | ![PM2 logs](assets/pm2-logs.png) |
+
 ## How it works
 
 1. Send "coffee" on Telegram
@@ -17,6 +23,7 @@ Automate your Tim Hortons mobile order via Telegram. Send "coffee" and your orde
 - Runs permanently via PM2
 - Only responds to a single authorized Telegram user ID
 - Dry-run mode for testing without placing real orders
+- Supports multiple accounts — run a separate instance per person
 
 ## Setup
 
@@ -86,10 +93,10 @@ Open the Tim Hortons app and browse around. In mitmweb, look for:
 - **Payment account ID**: any order-related request → `paymentAccountId` field
 - **Restaurant ID**: any order-related request → `restaurantId` field
 
-### 5. Configure .env
+### 5. Configure your env file
 
 ```bash
-cp .env.example .env
+cp .env.example .env.account1
 ```
 
 Fill in:
@@ -107,7 +114,7 @@ Fill in:
 ### 6. Run
 
 ```bash
-# Test first (DRY_RUN=true in .env)
+# Test first (DRY_RUN=true in your env file)
 npm start
 
 # Run permanently with PM2
@@ -120,12 +127,44 @@ pm2 save      # saves process list so it survives reboots
 #### PM2 cheat sheet
 
 ```bash
-pm2 status                        # see if the bot is running
-pm2 logs timhortons-bot           # live logs
-pm2 restart timhortons-bot        # restart (e.g. after editing .env)
-pm2 stop timhortons-bot           # stop
-pm2 start timhortons-bot          # start again
+pm2 status                             # see all running instances
+pm2 logs timhortons-account1           # live logs for an instance
+pm2 restart timhortons-account1        # restart (e.g. after editing env file)
+pm2 stop timhortons-account1           # stop
+pm2 start timhortons-account1          # start again
 ```
+
+## Multiple accounts
+
+You can run as many instances as you want — one per person. For each account:
+
+1. Copy the example env file with a unique name:
+   ```bash
+   cp .env.example .env.account2
+   ```
+2. Fill it in with that person's credentials (their own TH refresh token, payment ID, restaurant ID, Telegram bot token, and user ID)
+3. Add a new entry in `ecosystem.config.cjs`:
+   ```js
+   {
+     name: "timhortons-account2",
+     script: "npx",
+     args: "tsx index.ts",
+     cwd: __dirname,
+     interpreter: "none",
+     watch: false,
+     restart_delay: 5000,
+     max_restarts: 10,
+     env_file: ".env.account2",
+     log_date_format: "YYYY-MM-DD HH:mm:ss",
+   }
+   ```
+4. Start it:
+   ```bash
+   pm2 start ecosystem.config.cjs
+   pm2 save
+   ```
+
+Each instance runs completely independently with its own credentials and Telegram bot.
 
 ## Token refresh
 
@@ -137,7 +176,7 @@ The refresh token itself is long-lived but can expire in these situations:
 - You sign in on a new device and the old session gets invalidated
 - The token goes unused for ~30 days (Cognito inactivity timeout)
 
-If the bot stops working and `pm2 logs timhortons-bot` shows a Cognito auth error, just redo the mitmproxy capture to grab a fresh refresh token and update `TH_REFRESH_TOKEN` in `.env`, then `pm2 restart timhortons-bot`.
+If the bot stops working and `pm2 logs timhortons-account1` shows a Cognito auth error, just redo the mitmproxy capture to grab a fresh refresh token, update `TH_REFRESH_TOKEN` in the relevant env file, then `pm2 restart timhortons-account1`.
 
 ## Customizing your order
 
